@@ -2,8 +2,6 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <malloc.h>
-
-
 #define DEBUG 0
 
 void msgBoasVindas(void);
@@ -14,6 +12,8 @@ int menuUsuario();
 void criptografar();
 void decriptografar();
 struct mensagem env_criptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo );
+struct mensagem env_decriptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo );
+
 //ESTRUTURA PARA COLOCAR O CONTEUDO DO ARQUIVO
 struct mensagem
 {
@@ -128,26 +128,28 @@ void criptografar(){
     FILE *fp;
 	unsigned char * corpo;
     unsigned long long int lSize;
-    char arquivo1[50],arquivo2[50];
+    char arquivo1[50], arquivo2[50];
 	
+	//Informando o caminho dos dois arquivos
     printf("\nDigite o nome do arquivo de origem:");
     scanf(" %s",arquivo1);
     printf("\nDigite o nome do arquivo de destino:");
     scanf(" %s",arquivo2);
-
-			fp = fopen (arquivo1 , "rb" );
-			if( !fp )  perror("teste_entradaPUNK.txt"),fprintf(stderr, "Falha em: %d - %s\n", __LINE__,__FILE__),exit(1);
-			fseek( fp , 0L , SEEK_END);
-			lSize = ftell( fp );
-			rewind( fp );
-			corpo = (unsigned char *)calloc( lSize+1, sizeof(unsigned char));
-			if( !corpo ) fclose(fp),fprintf(stderr, "Erro ao obter memoria %d - %s\n", __LINE__,__FILE__),exit(1);
-			if( 1!=fread( corpo , lSize, 1 , fp) )
+    
+            //Abrindo o arquivo de origem
+			fp = fopen (arquivo1 , "rb" ); //"rb" significa que o arquivo vai ser utilizado para leitura(r) em modo binário(b)
+			if( !fp )  perror("Falha"),fprintf(stderr, "Falha em: %d - %s\n", __LINE__,__FILE__),exit(1); //Verifica se ocorreu falha ao abrir arquivo
+			fseek( fp , 0L , SEEK_END); //Varre o arquivo até o final
+			lSize = ftell( fp ); //Armazena o tamanho na variavel lSize
+			rewind( fp ); 
+			corpo = (unsigned char *)calloc( lSize+1, sizeof(unsigned char)); 
+			if( !corpo ) fclose(fp),fprintf(stderr, "Erro ao obter memoria %d - %s\n", __LINE__,__FILE__),exit(1); //Verifica se ocorreu erro na alocação do arquivo para memoria
+			if( 1!=fread( corpo , lSize, 1 , fp) ) 
 			fclose(fp),free(corpo),fputs("Falha ao realizar a leitura",stderr),exit(1);
             
             
             //criptografando
-            msg_testeEscura=env_criptografar(corpo,lSize);            
+            msg_testeEscura=env_criptografar(corpo,lSize); //Passa o corpo e o tamanho do arquivo para a estrutura env_criptografar            
             
             FILE *fpOut;
 			fpOut = fopen (arquivo2 , "wb" );
@@ -156,7 +158,6 @@ void criptografar(){
 		
             fclose(fpOut);
 }
-
 
 
 struct mensagem env_criptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo ){
@@ -172,8 +173,52 @@ struct mensagem env_criptografar (const unsigned char * conteudo_arquivo,unsigne
             }
         
      return (msg_testeEscura);
-
 }
-void decriptografar(){
 
+void decriptografar(){
+    struct mensagem msg_testeEscura; //utilizado para receber o retorno da mensagem
+    FILE *fp;
+	unsigned char * corpo;
+    unsigned long long int lSize;
+    char arquivo1[50],arquivo2[50];
+	
+    printf("\nDigite o nome do arquivo de origem:");
+    scanf(" %s",arquivo1);
+    printf("\nDigite o nome do arquivo de destino:");
+    scanf(" %s",arquivo2);
+
+			fp = fopen (arquivo1 , "rb" );
+			if( !fp )  perror("Falha"),fprintf(stderr, "Falha em: %d - %s\n", __LINE__,__FILE__),exit(1);
+			fseek( fp , 0L , SEEK_END);
+			lSize = ftell( fp );
+			rewind( fp );
+			corpo = (unsigned char *)calloc( lSize+1, sizeof(unsigned char));
+			if( !corpo ) fclose(fp),fprintf(stderr, "Erro ao obter memoria %d - %s\n", __LINE__,__FILE__),exit(1);
+			if( 1!=fread( corpo , lSize, 1 , fp) )
+			fclose(fp),free(corpo),fputs("Falha ao realizar a leitura",stderr),exit(1);
+            
+            
+            //decriptografando
+            msg_testeEscura=env_decriptografar(corpo,lSize);            
+            
+            FILE *fpOut;
+			fpOut = fopen (arquivo2 , "wb" );
+			if( !fpOut )  perror(arquivo2),exit(1);
+			fwrite(msg_testeEscura.conteudo, 1, msg_testeEscura.tamanho, fpOut);
+		
+            fclose(fpOut);
+}
+
+struct mensagem env_decriptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo ){
+    unsigned long long int count;
+    struct mensagem msg_testeEscura; //utilizado para receber o retorno da mensagem
+    
+    msg_testeEscura.tamanho=tamanho_corpo;
+    msg_testeEscura.conteudo=conteudo_arquivo;
+            
+            for (count = 0 ; count <= msg_testeEscura.tamanho; count ++){
+                msg_testeEscura.conteudo[count]=((int)msg_testeEscura.conteudo[count]-3)%256;
+            }
+        
+     return (msg_testeEscura);
 }
