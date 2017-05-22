@@ -1,29 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <malloc.h>
+#include <locale.h>
 #define DEBUG 0
 
 
-/*void LerArquivo() {
-
-        char url[]="Texto.txt";
-        char ch;
-        FILE *arq;
-	if (DEBUG) printf ("--------------------ENTRANDO NA FUNÇÃO DE LerArquivo--------------------\n");
-        
-        arq = fopen(url, "r");
-        if(arq == NULL)
-            printf("ERRO, NÃO FOI POSSÍVEL ABRIR O ARQUIVO\n");
-        else
-            while( (ch=fgetc(arq))!= EOF )
-                putchar(ch);
-
-        fclose(arq);
-	
-	if (DEBUG) printf ("--------------------SAINDO DA FUNÇÃO DE LerArquivo--------------------\n\n");
-        
-
-    }
-*/
 
 void LerArquivo() {
 
@@ -45,6 +26,7 @@ void LerArquivo() {
                 putchar(ch);
 
         fclose(arq);
+	printf("\n");
        }		
 	if (DEBUG) printf ("--------------------SAINDO DA FUNÇÃO DE LerArquivo--------------------\n\n");
         
@@ -72,12 +54,81 @@ void MensagemSaida() {
 
     }
 
-void Criptografar() {
+	struct mensagem env_criptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo );
+	//ESTRUTURA PARA COLOCAR O CONTEUDO DO ARQUIVO
+	struct mensagem 
+		{ 
+		unsigned long long int tamanho; 
+		unsigned char * conteudo;
+		};
 
+	
+void Criptografar() {
+	if (DEBUG) printf ("--------------------ENTRANDO NA FUNÇÃO DE Criptografar--------------------\n");
+			
+	//utilizado para receber o retorno da mensagem
+	struct mensagem msg_testeEscura; 
+    	FILE *fp;
+	unsigned char * corpo;
+    	unsigned long long int lSize;
+    	char arquivo1[50],arquivo2[50];
+	
+    		printf("\nDigite o nome do arquivo de origem:");
+    		scanf(" %s",arquivo1);
+    		printf("\nDigite o nome do arquivo de destino:");
+    		scanf(" %s",arquivo2);
+
+			fp = fopen (arquivo1 , "rb" );
+			if( !fp )  perror("teste_entradaPUNK.txt"),fprintf(stderr, "Falha em: %d - %s\n", __LINE__,__FILE__),exit(1);
+			fseek( fp , 0L , SEEK_END);
+			lSize = ftell( fp );
+			rewind( fp );
+			corpo = (unsigned char *)calloc( lSize+1, sizeof(unsigned char));
+			if( !corpo ) fclose(fp),fprintf(stderr, "Erro ao obter memoria %d - %s\n", __LINE__,__FILE__),exit(1);
+			if( 1!=fread( corpo , lSize, 1 , fp) )
+			fclose(fp),free(corpo),fputs("Falha ao realizar a leitura",stderr),exit(1);
+            
+            
+        //criptografando
+        msg_testeEscura=env_criptografar(corpo,lSize);            
+            
+        FILE *fpOut;
+			fpOut = fopen (arquivo2 , "wb" );
+			if( !fpOut )  perror(arquivo2),exit(1);
+			fwrite(msg_testeEscura.conteudo, 1, msg_testeEscura.tamanho, fpOut);
+		
+        fclose(fpOut);
+
+	if (DEBUG) printf ("--------------------SAINDO DA FUNÇÃO DE Criptografar--------------------\n\n");
 
 }
 
+
+struct mensagem env_criptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo ){
+    	unsigned long long int count;
+
+    	//utilizado para receber o retorno da mensagem
+	struct mensagem msg_testeEscura;     
+    	msg_testeEscura.tamanho=tamanho_corpo;
+    	msg_testeEscura.conteudo=conteudo_arquivo;
+            
+            	for (count = 0 ; count <= msg_testeEscura.tamanho; count ++){
+                	//printf("\n%c",msg_testeEscura.conteudo[count]);
+                	msg_testeEscura.conteudo[count]=((int)msg_testeEscura.conteudo[count]+3)%256;
+            	}	
+        
+     		return (msg_testeEscura);
+
+}
+
+
+
 void Decriptografar() {
+	if (DEBUG) printf ("--------------------ENTRANDO NA FUNÇÃO DE Decriptografar--------------------\n");
+    
+
+
+	if (DEBUG) printf ("--------------------SAINDO DA FUNÇÃO DE Decriptografar--------------------\n\n");
 
 
 }
