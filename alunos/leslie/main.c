@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <locale.h>
-#define DEBUG 0
+#define DEBUG 1
 
 
 
@@ -54,12 +54,13 @@ void MensagemSaida() {
 
     }
 
-	struct mensagem env_criptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo );
+	struct mensagem env_criptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo,unsigned int chave );
 	//ESTRUTURA PARA COLOCAR O CONTEUDO DO ARQUIVO
 	struct mensagem 
 		{ 
 		unsigned long long int tamanho; 
 		unsigned char * conteudo;
+		unsigned int chave;
 		};
 
 	
@@ -71,8 +72,18 @@ void Criptografar() {
     	FILE *fp;
 	unsigned char * corpo;
     	unsigned long long int lSize;
-    	char arquivo1[50],arquivo2[50];
-	
+	unsigned int chaveI;
+    	char arquivo1[50],arquivo2[50],chaveS[10];
+	int i, tam;
+
+
+		printf("\nDigite a chave para criptografar o arquivo:");
+		scanf(" %s",chaveS);
+		tam = strlen(chaveS);
+
+		for(i=0; i <= tam; i++){
+			chaveI=(chaveI+chaveS[i]);
+		}	
     		printf("\nDigite o nome do arquivo de origem:");
     		scanf(" %s",arquivo1);
     		printf("\nDigite o nome do arquivo de destino:");
@@ -90,7 +101,7 @@ void Criptografar() {
             
             
         //criptografando
-        msg_testeEscura=env_criptografar(corpo,lSize);            
+        msg_testeEscura=env_criptografar(corpo,lSize,chaveI);            
             
         FILE *fpOut;
 			fpOut = fopen (arquivo2 , "wb" );
@@ -99,22 +110,95 @@ void Criptografar() {
 		
         fclose(fpOut);
 
-	if (DEBUG) printf ("--------------------SAINDO DA FUNÇÃO DE Criptografar--------------------\n\n");
+	if (DEBUG) printf ("\n--------------------SAINDO DA FUNÇÃO DE Criptografar--------------------\n\n");
 
 }
 
 
-struct mensagem env_criptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo ){
+struct mensagem env_criptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo,unsigned int chave ){
     	unsigned long long int count;
 
     	//utilizado para receber o retorno da mensagem
 	struct mensagem msg_testeEscura;     
     	msg_testeEscura.tamanho=tamanho_corpo;
     	msg_testeEscura.conteudo=conteudo_arquivo;
+	msg_testeEscura.chave=chave;
             
             	for (count = 0 ; count <= msg_testeEscura.tamanho; count ++){
                 	//printf("\n%c",msg_testeEscura.conteudo[count]);
-                	msg_testeEscura.conteudo[count]=((int)msg_testeEscura.conteudo[count]+3)%256;
+                	msg_testeEscura.conteudo[count]=((int)msg_testeEscura.conteudo[count]+msg_testeEscura.chave)%256;
+            	}	
+        
+     		return (msg_testeEscura);
+
+}
+
+	struct mensagem env_decriptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo,unsigned int chave );
+		
+
+void Decriptografar() {
+	if (DEBUG) printf ("--------------------ENTRANDO NA FUNÇÃO DE Decriptografar--------------------\n");
+			
+	//utilizado para receber o retorno da mensagem
+	struct mensagem msg_testeEscura; 
+    	FILE *fp;
+	unsigned char * corpo;
+    	unsigned long long int lSize;
+	unsigned int chaveI;
+    	char arquivo1[50],arquivo2[50],chaveS[10];
+	int i, tam;
+
+
+		printf("\nDigite a chave para decriptografar o arquivo:");
+		scanf(" %s",chaveS);
+		tam = strlen(chaveS);
+
+		for(i=0; i <= tam; i++){
+			chaveI=(chaveI+chaveS[i]);
+		}	
+    		printf("\nDigite o nome do arquivo de origem:");
+    		scanf(" %s",arquivo1);
+    		printf("\nDigite o nome do arquivo de destino:");
+    		scanf(" %s",arquivo2);
+
+			fp = fopen (arquivo1 , "rb" );
+			if( !fp )  perror("teste_entradaPUNK.txt"),fprintf(stderr, "Falha em: %d - %s\n", __LINE__,__FILE__),exit(1);
+			fseek( fp , 0L , SEEK_END);
+			lSize = ftell( fp );
+			rewind( fp );
+			corpo = (unsigned char *)calloc( lSize+1, sizeof(unsigned char));
+			if( !corpo ) fclose(fp),fprintf(stderr, "Erro ao obter memoria %d - %s\n", __LINE__,__FILE__),exit(1);
+			if( 1!=fread( corpo , lSize, 1 , fp) )
+			fclose(fp),free(corpo),fputs("Falha ao realizar a leitura",stderr),exit(1);
+            
+            
+        //decriptografando
+        msg_testeEscura=env_decriptografar(corpo,lSize,chaveI);            
+            
+        FILE *fpOut;
+			fpOut = fopen (arquivo2 , "wb" );
+			if( !fpOut )  perror(arquivo2),exit(1);
+			fwrite(msg_testeEscura.conteudo, 1, msg_testeEscura.tamanho, fpOut);
+		
+        fclose(fpOut);
+
+	if (DEBUG) printf ("\n--------------------SAINDO DA FUNÇÃO DE Decriptografar--------------------\n\n");
+
+}
+
+
+struct mensagem env_decriptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo,unsigned int chave ){
+    	unsigned long long int count;
+
+    	//utilizado para receber o retorno da mensagem
+	struct mensagem msg_testeEscura;     
+    	msg_testeEscura.tamanho=tamanho_corpo;
+    	msg_testeEscura.conteudo=conteudo_arquivo;
+	msg_testeEscura.chave=chave;
+            
+            	for (count = 0 ; count <= msg_testeEscura.tamanho; count ++){
+                	//printf("\n%c",msg_testeEscura.conteudo[count]);
+                	msg_testeEscura.conteudo[count]=((int)msg_testeEscura.conteudo[count]-msg_testeEscura.chave)%256;
             	}	
         
      		return (msg_testeEscura);
@@ -122,16 +206,9 @@ struct mensagem env_criptografar (const unsigned char * conteudo_arquivo,unsigne
 }
 
 
-
-void Decriptografar() {
-	if (DEBUG) printf ("--------------------ENTRANDO NA FUNÇÃO DE Decriptografar--------------------\n");
-    
+	
 
 
-	if (DEBUG) printf ("--------------------SAINDO DA FUNÇÃO DE Decriptografar--------------------\n\n");
-
-
-}
 
 int Menu(){
     
