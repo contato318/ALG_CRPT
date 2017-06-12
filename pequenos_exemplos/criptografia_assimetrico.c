@@ -117,7 +117,9 @@ struct keyAss ASS_dec(const char * pass,const char * nome_pvt,const struct keyAs
 			if( 1!=fread( chavePrivadaArquivo , lSize, 1 , fp) )
 			  fclose(fp),free(chavePrivadaArquivo),fputs("Falha ao realizar a leitura",stderr),exit(1);
 			fclose(fp);
-
+	
+	    //DECIFRANDO a privada (aqui vc deverá usa A SUA CRIFRA SIMÉTRICA!!!!!!)
+	    // NECESSÁRIO ALTERAR!
             int cCriptChave;
             for(cCriptChave=0;cCriptChave<lSize;cCriptChave++){
                 chavePrivadaArquivo[cCriptChave]=(chavePrivadaArquivo[cCriptChave]-127)%256;
