@@ -1,0 +1,241 @@
+#include <stdio.h>
+#include <locale.h>
+#include <stdlib.h>
+#include <malloc.h>
+#define DEBUG 0
+
+void msgBoasVindas(void);
+int msgSaida(void);
+void setarAcentuacao(void);
+int lerArquivo();
+int menuUsuario();
+void criptografar();
+void decriptografar();
+struct mensagem env_criptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo, unsigned int chave );
+struct mensagem env_decriptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo, unsigned int chave );
+
+struct mensagem
+{
+	unsigned long long int tamanho;
+	unsigned char * conteudo;
+	unsigned int chave;
+};
+int main(void){
+    setarAcentuacao();
+    menuUsuario();
+}
+void msgBoasVindas(void){
+    if (DEBUG) printf ("\nEntrando na fun��o de msgBoasVindas");
+    printf("\n---C-R-I-P-T-O-G-R-A-F-A-N-D-O----A-R-Q-U-I-V-O-S---");
+    if (DEBUG) printf ("\nSaindo da fun��o de msgBoasVindas");
+}
+int msgSaida(){
+    if (DEBUG) printf ("\nEntrando na fun��o de msgSaida");
+    printf("\n\tD E S L I G A N D O    P R O G R A M A\n");
+    printf("                 O B R I G A D O !            ");
+    getchar();
+    if (DEBUG) printf ("\nSaindo da fun��o de msgSaida");
+    return (0);
+}
+int lerArquivo(){
+    msgBoasVindas();
+
+    if (DEBUG) printf ("\nEntrando na fun��o de lerArquivo");
+    char str[50];
+    printf("\nNome do arquivo: ");
+    scanf(" %s",str);
+	char ch;
+	FILE *arq;
+	arq = fopen(str, "r");
+	if(arq == NULL){
+	    printf("\n\tERRO\n\n");
+	    system("pause");
+	    system("CLS");
+	    msgBoasVindas();
+	}else{
+        printf("\n");
+	    while( (ch=fgetc(arq))!= EOF )
+		    putchar(ch);
+	    fclose(arq);
+	    printf("\n");
+	    system("pause");
+	    system("CLS");
+	    msgBoasVindas();
+     }
+    if (DEBUG) printf ("\nSaindo da fun��o de lerArquivo");
+return 0;
+}
+void setarAcentuacao(){
+    if (DEBUG) printf ("\nEntrando na fun��o de setarAcentuacao");
+    setlocale(LC_ALL, "Portuguese");
+    if (DEBUG) printf ("\nSaindo da fun��o de setarAcentuacao");
+}
+int menuUsuario(){
+    system("CLS");
+    msgBoasVindas();
+    if (DEBUG) printf ("\nEntrando na fun��o de menuUsuario");
+    setbuf(stdin, NULL);
+    int continuar=1;
+    do
+    {
+        printf("\n\nHOME - Escolha alguma opcao: ( Choose any option )");
+        printf("\n\n(0) Sair / Exit");
+		printf("\n(1) Criptografar / Encrypt");
+        printf("\n(2) Descriptografar / Decrypt");
+        printf("\n(3) Ler Arquivo / Read file");
+        printf("\n\nOpcao / Option --> ");
+        
+        scanf(" %d", &continuar);
+        system("cls || clear");
+
+        switch(continuar)
+        {
+            case 1:
+                criptografar();
+                break;
+
+            case 2:
+                decriptografar();
+                break;
+
+            case 3:
+                lerArquivo();
+                break;
+
+            case 0:
+                msgSaida();
+                break;
+
+            default:
+                msgBoasVindas();
+                printf("\n\tOPCAO INVALIDA.");
+        }
+    } while(continuar);
+    if (DEBUG) printf ("\nSaindo da fun��o de menuUsuario");
+}
+void criptografar(){
+
+    struct mensagem msg_testeEscura;
+    FILE *fp;
+	unsigned char * corpo;
+    unsigned long long int lSize;
+    unsigned int chaveI;
+    char arquivo1[50], arquivo2[50], chaveS[50];
+    int i, tam;
+
+    msgBoasVindas();
+    
+    printf("\nArquivo de origem: ");
+    scanf(" %s",arquivo1);
+    printf("\nArquivo de destino: ");
+    scanf(" %s",arquivo2);
+    printf("\nCriar chave: ");
+    scanf(" %s",chaveS);
+    tam = strlen(chaveS);
+
+    for(i=0; i <= tam; i++){
+        chaveI=(chaveI+chaveS[i]);
+    }
+			fp = fopen (arquivo1 , "rb" );
+			if( !fp )  perror("Falha"),fprintf(stderr, "Falha em: %d - %s\n", __LINE__,__FILE__),exit(1); 
+			fseek( fp , 0L , SEEK_END); 
+			lSize = ftell( fp );
+			rewind( fp );
+			corpo = (unsigned char *)calloc( lSize+1, sizeof(unsigned char));
+			if( !corpo ) fclose(fp),fprintf(stderr, "Erro ao obter memoria %d - %s\n", __LINE__,__FILE__),exit(1); 
+			if( 1!=fread( corpo , lSize, 1 , fp) )
+			fclose(fp),free(corpo),fputs("Falha ao realizar a leitura",stderr),exit(1);
+
+            msg_testeEscura=env_criptografar(corpo,lSize,chaveI);
+            FILE *fpOut;
+			fpOut = fopen (arquivo2 , "wb" );
+			if( !fpOut )  perror(arquivo2),exit(1);
+			fwrite(msg_testeEscura.conteudo, 1, msg_testeEscura.tamanho, fpOut);
+
+            fclose(fpOut);
+
+            printf("\nACAO CONCLUIDA COM SUCESSO\n\n");
+            system("pause");
+            system("CLS");
+            msgBoasVindas();
+}
+
+
+struct mensagem env_criptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo, unsigned int chave){
+    unsigned long long int count;
+    struct mensagem msg_testeEscura;
+
+    msg_testeEscura.tamanho=tamanho_corpo;
+    msg_testeEscura.conteudo=conteudo_arquivo;
+    msg_testeEscura.chave=chave;
+
+            for (count = 0 ; count <= msg_testeEscura.tamanho; count ++){
+                msg_testeEscura.conteudo[count]=((int)msg_testeEscura.conteudo[count]+msg_testeEscura.chave)%256;
+            }
+
+     return (msg_testeEscura);
+}
+
+void decriptografar(){
+    struct mensagem msg_testeEscura;
+    FILE *fp;
+	unsigned char * corpo;
+    unsigned long long int lSize;
+    unsigned int chaveI;
+    char arquivo1[50],arquivo2[50], chaveS[50];
+    int i, tam;
+
+
+    msgBoasVindas();
+
+    printf("\nArquivo de origem: ");
+    scanf(" %s",arquivo1);
+    printf("\nArquivo de destino: ");
+    scanf(" %s",arquivo2);
+    printf("\nChave de acesso: ");
+    scanf(" %s",chaveS);
+    tam = strlen(chaveS);
+
+    for(i=0; i <= tam; i++){
+        chaveI=(chaveI+chaveS[i]);
+    }
+
+			fp = fopen (arquivo1 , "rb" );
+			if( !fp )  perror("Falha"),fprintf(stderr, "Falha em: %d - %s\n", __LINE__,__FILE__),exit(1);
+			fseek( fp , 0L , SEEK_END);
+			lSize = ftell( fp );
+			rewind( fp );
+			corpo = (unsigned char *)calloc( lSize+1, sizeof(unsigned char));
+			if( !corpo ) fclose(fp),fprintf(stderr, "Erro ao obter memoria %d - %s\n", __LINE__,__FILE__),exit(1);
+			if( 1!=fread( corpo , lSize, 1 , fp) )
+			fclose(fp),free(corpo),fputs("Falha ao realizar a leitura",stderr),exit(1);
+
+            msg_testeEscura=env_decriptografar(corpo,lSize,chaveI);
+
+            FILE *fpOut;
+			fpOut = fopen (arquivo2 , "wb" );
+			if( !fpOut )  perror(arquivo2),exit(1);
+			fwrite(msg_testeEscura.conteudo, 1, msg_testeEscura.tamanho, fpOut);
+
+            fclose(fpOut);
+            printf("\nACAO CONCLUIDA COM SUCESSO.\n\n");
+            system("pause");
+            system("CLS");
+            msgBoasVindas();
+}
+
+struct mensagem env_decriptografar (const unsigned char * conteudo_arquivo,unsigned long long int tamanho_corpo, unsigned int chave){
+    unsigned long long int count;
+    struct mensagem msg_testeEscura; 
+
+    msg_testeEscura.tamanho=tamanho_corpo;
+    msg_testeEscura.conteudo=conteudo_arquivo;
+    msg_testeEscura.chave=chave;
+
+            for (count = 0 ; count <= msg_testeEscura.tamanho; count ++){
+                msg_testeEscura.conteudo[count]=((int)msg_testeEscura.conteudo[count]-msg_testeEscura.chave)%256;
+            }
+
+     return (msg_testeEscura);
+}
+
